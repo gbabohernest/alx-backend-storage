@@ -5,10 +5,11 @@
 
 DELIMITER //
 
+DROP FUNCTION IF EXISTS SafeDiv;    
 CREATE FUNCTION SafeDiv(a INT, b INT)
-    RETURNS DECIMAL(10, 4)
+RETURNS FLOAT
 BEGIN
-    DECLARE result DECIMAL(10, 4);
+    DECLARE result FLOAT;
 
     IF b = 0 THEN
         SET result = 0;
