@@ -11,4 +11,4 @@ MySQL or NoSQL.
 | Project									| Description								|
 |-------------------------------------------------------------------------------|-----------------------------------------------------------------------|
 | [`0x00-MySQL_Advanced`](./0x00-MySQL_Advanced/)				| MySQL_Advanced - **`SQL`** **`Backend`** **`MySQL`**			|
-| [`0x01-NoSQL`](./0x01-NoSQL/)							| NoSQL - **`NoSQL``** **`Backend`** **`MongoDB`**			|
+| [`0x01-NoSQL`](./0x01-NoSQL/)							| NoSQL - **`NoSQL`**  **`Backend`**  **`MongoDB`**			|
