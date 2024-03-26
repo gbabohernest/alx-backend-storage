@@ -11,7 +11,7 @@ import pymongo
 
 def schools_by_topic(mongo_collection, topic):
     """
-
+    Return the list of school having a specific topic
     :param mongo_collection: pymongo collection object
     :param topic:  Topic searched.
     :return:  list of school having a specific topic
