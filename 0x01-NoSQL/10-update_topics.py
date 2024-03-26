@@ -23,6 +23,6 @@ def update_topics(mongo_collection, name, topics):
     :return: updated school document
     """
 
-    updated_doc = mongo_collection.update_one({"name": name},
-                                              {"$set": {"topics": topics}})
+    updated_doc = mongo_collection.update_many({"name": name},
+                                               {"$set": {"topics": topics}})
     return updated_doc
