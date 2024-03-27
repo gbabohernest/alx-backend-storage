@@ -30,7 +30,7 @@ def nginx_log_stats():
                                                      "path": "/status"})
 
     print(f"{total_logs} logs")
-    print("Methods")
+    print("Methods:")
 
     for method, count in methods_count.items():
         print(f"\tmethod {method}: {count}")
