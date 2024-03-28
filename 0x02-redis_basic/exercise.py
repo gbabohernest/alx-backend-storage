@@ -9,6 +9,31 @@ from typing import Union, Callable, Any, Awaitable
 redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 
+def count_calls(method: Callable) -> Callable:
+    """
+    Decorator to count how many times a method is called.
+    :param method: Callable - The method to be wrapped & counted.
+    :return: Callable - The wrapped method that increments the call
+             count and returns the result of the original method.
+    """
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs) -> Any:
+        """
+        Increments the count for the method and calls
+        the original method with the provided arguments.
+        :param self: Instance of the class.
+        :param args: Positional arguments.
+        :param kwargs: keyword arguments
+        :return: Any - Result of the original method.
+        """
+        key = method.__qualname__
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 def call_history(method: Callable) -> Callable:
     """
     Decorator to store the history of inputs
@@ -18,6 +43,7 @@ def call_history(method: Callable) -> Callable:
     :return: Callable - The wrapped method that stores
              input/output history in Redis.
     """
+
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         """
@@ -44,30 +70,6 @@ def call_history(method: Callable) -> Callable:
         redis_client.rpush(outputs_key, output_str)
 
         return output
-
-    return wrapper
-
-
-def count_calls(method: Callable) -> Callable:
-    """
-    Decorator to count how many times a method is called.
-    :param method: Callable - The method to be wrapped & counted.
-    :return: Callable - The wrapped method that increments the call
-             count and returns the result of the original method.
-    """
-    @wraps(method)
-    def wrapper(self, *args, **kwargs) -> Any:
-        """
-        Increments the count for the method and calls
-        the original method with the provided arguments.
-        :param self: Instance of the class.
-        :param args: Positional arguments.
-        :param kwargs: keyword arguments
-        :return: Any - Result of the original method.
-        """
-        key = method.__qualname__
-        self._redis.incr(key)
-        return method(self, *args, **kwargs)
 
     return wrapper
 
@@ -105,8 +107,8 @@ class Cache:
         self._redis = redis.Redis(host='localhost', port=6379, db=0)
         self._redis.flushdb()
 
-    @call_history
     @count_calls
+    @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
         Store the input data in Redis with a random key and return the key.
