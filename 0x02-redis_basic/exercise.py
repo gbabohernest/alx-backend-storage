@@ -96,13 +96,14 @@ def replay(method: Callable) -> None:
 
         # times_method_is_called = method.__qualname__
 
-        input_str = eval(input_data.decode())
-        output_str = output_data.decode()
+        # input_str = eval(input_data.decode())
+        # output_str = output_data.decode()
 
         # data = f"(*{eval(input_data.decode())}) -> {output_data.decode()}"
         # print(f"{times_method_is_called}{data}")
 
-        print(f"{method.__qualname__}{input_str} -> {output_str}")
+        print(f"{method.__qualname__}"
+              f"(*{input_data.decode()}) -> {output_data.decode()}")
 
 
 class Cache:
