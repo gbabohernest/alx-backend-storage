@@ -90,10 +90,19 @@ def replay(method: Callable) -> None:
     inputs = redis_client.lrange(inputs_key, 0, -1)
     outputs = redis_client.lrange(outputs_key, 0, -1)
 
+    print(f"{method.__qualname__} was called {len(inputs)} times:")
+
     for input_data, output_data in zip(inputs, outputs):
-        times_method_is_called = method.__qualname__
-        data = f"(*{eval(input_data.decode())}) -> {output_data.decode()}"
-        print(f"{times_method_is_called}{data}")
+
+        # times_method_is_called = method.__qualname__
+
+        input_str = eval(input_data.decode())
+        output_str = output_data.decode()
+
+        # data = f"(*{eval(input_data.decode())}) -> {output_data.decode()}"
+        # print(f"{times_method_is_called}{data}")
+
+        print(f"{method.__qualname__}{input_str} -> {output_str}")
 
 
 class Cache:
