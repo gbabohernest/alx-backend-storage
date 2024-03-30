@@ -4,49 +4,93 @@
 import redis
 import requests
 from functools import wraps
+from typing import Callable, Any
 
-r = redis.Redis()
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 
-def count_calls(method):
-    """Decorator to count the number of times a method is called.
+def normalize_url(url: str) -> str:
+    """
+    Normalize the URL by removing trailing slashes.
 
-    Args:
-        method: The method to be decorated.
+    :param: url(str) The URL to normalize.
+    :return: str - The normalized URL.
+    """
+    return url.rstrip('/')
+
+
+def count_call(method: Callable):
+    """
+    Decorator to count how many times a
+    function is called for a specific URL.
+
+    :param: method (callable): The method to be decorated.
+    :return: callable: The wrapped method.
     """
     @wraps(method)
-    def wrapper(url):
-        """wrapper function"""
-        key = "cached:" + url
-        cached_value = r.get(key)
-        if cached_value:
-            return cached_value.decode("utf-8")
+    def wrapper(*args, **kwargs) -> Any:
+        """
+        Wrapper function that increments the count
+        for the method and calls the original method.
 
-        # Get new content and update cache
-        key_count = "count:" + url
-        html_content = method(url)
+        :param: *args: Positional arguments
+                **kwargs: keyword arguments
+        :return: Any - The result of original method.
+        """
+        url = normalize_url(args[0])
+        count_key = f"count:{url}"
+        redis_client.incr(count_key)
+        return method(*args, **kwargs)
 
-        r.incr(key_count)
-        r.set(key, html_content, ex=10)
-        r.expire(key, 10)
-        return html_content
     return wrapper
 
 
-@count_calls
+def cache_result(method: Callable) -> Callable:
+    """
+     Decorator to cache the result of a function
+     with an expiration time of 10 seconds.
+
+     :param: method(Callable): The method to be decorated.
+     :return: callable: The wrapped method.
+    """
+    @wraps(method)
+    def wrapper(*args, **kwargs) -> Any:
+        """
+        Wrapper function that checks if the result
+        is cached and returns it, otherwise, executes the
+        original method, caches the result, and returns it.
+
+        :param: *args: Positional arguments
+                **kwargs: keyword arguments
+        :return: Any: The cached result or the result
+                of the original method.
+        """
+        url = normalize_url(args[0])
+        cached_content_key = f"cached_content:{url}"
+        cached_content = redis_client.get(cached_content_key)
+
+        if cached_content:
+            return cached_content.decode('utf-8')
+
+        try:
+            with requests.get(url) as response:
+                response.raise_for_status()
+                html_content = response.text
+                redis_client.setex(cached_content_key, 10, html_content)
+                return html_content
+        except requests.RequestException as e:
+            print(f"Error fetching URL: {e}")
+            return f"Error: {e}"
+
+    return wrapper
+
+
+@count_call
+@cache_result
 def get_page(url: str) -> str:
     """
-    Get the HTML content of a URL and cache it.
-
-    Args:
-        url (str): The URL to get the HTML content from.
-
-    Returns:
-        str: The HTML content of the URL.
+    Retrieve the HTML content of a URL and track the number of accesses.
+    :param: url (str): The URL to retrieve HTML content from.
+    :returns: str: The HTML content of the URL.
     """
-    results = requests.get(url)
-    return results.text
-
-
-if __name__ == "__main__":
-    get_page('http://slowwly.robertomurray.co.uk')
+    return url
