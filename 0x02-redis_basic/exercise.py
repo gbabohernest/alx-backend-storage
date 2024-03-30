@@ -62,12 +62,14 @@ def call_history(method: Callable) -> Callable:
         outputs_key = method.__qualname__ + ":outputs"
 
         input_str = str(args)
-        redis_client.rpush(inputs_key, input_str)
+        # redis_client.rpush(inputs_key, input_str)
+        self._redis.rpush(inputs_key, input_str)
 
         output = method(self, *args, **kwargs)
 
         output_str = str(output)
-        redis_client.rpush(outputs_key, output_str)
+        # redis_client.rpush(outputs_key, output_str)
+        self._redis.rpush(outputs_key, output_str)
 
         return output
 
